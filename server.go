@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -29,7 +31,8 @@ func main() {
 	}))
 
 	r.Get("/media/{videoname:[\\w]+}/stream/", streamInit)
-	r.Get("/media/{videoname:[\\w]+}/stream/{segment:index[0-9]+.ts}", streamContinue)
+	r.Get("/media/{videoname:[\\w]+}/stream/{segment:[\\w]+.ts}", streamContinue)
+	r.Get("/thumbnail/{thumbnail:[\\w]+.jpg}/", getThumbnail)
 
 	http.ListenAndServe(":"+PORT, r)
 
@@ -50,7 +53,7 @@ func streamInit(w http.ResponseWriter, req *http.Request) {
 	videoname := chi.URLParam(req, "videoname")
 
 	mediaBase := getMediaBase(videoname)
-	m3u8Name := "index.m3u8"
+	m3u8Name := videoname + ".m3u8"
 	mediaFile := filepath.Join(mediaBase, m3u8Name)
 
 	w.Header().Set("Content-Type", "application/x-mpegURL")
@@ -68,6 +71,19 @@ func streamContinue(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "video/MP2T")
 	http.ServeFile(w, req, mediaFile)
 
+}
+
+func getThumbnail(w http.ResponseWriter, req *http.Request) {
+
+	fmt.Println("got here")
+	thumbnailname := chi.URLParam(req, "thumbnail")
+
+	mediabase := getMediaBase(strings.Split(thumbnailname, ".jpg")[0])
+	fmt.Println(thumbnailname)
+	thumbnailFile := filepath.Join(mediabase, thumbnailname)
+
+	w.Header().Set("Content-Type", "image/JPEG")
+	http.ServeFile(w, req, thumbnailFile)
 }
 
 func getMediaBase(videoname string) string {
