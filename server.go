@@ -23,16 +23,17 @@ func main() {
 	// for more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing
 	r.Use(cors.Handler(cors.Options{
 		AllowOriginFunc:  AllowOriginFunc,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	r.Get("/media/{videoname:[\\w]+}/stream/", streamInit)
-	r.Get("/media/{videoname:[\\w]+}/stream/{segment:[\\w]+.ts}", streamContinue)
+	r.Get("/media/{videoname:[\\w-]+}/stream/", streamInit)
+	r.Get("/media/{videoname:[\\w-]+}/stream/{segment:[\\w-]+.ts}", streamContinue)
 	r.Get("/thumbnail/{thumbnail:[\\w]+.jpg}/", getThumbnail)
+	r.Get("/profile/{profile:^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$}/", getProfileImage)
 
 	http.ListenAndServe(":"+PORT, r)
 
@@ -73,9 +74,9 @@ func streamContinue(w http.ResponseWriter, req *http.Request) {
 
 }
 
+// Assuming thumbnails are in jpeg format and in the same folder as its corresponding hls files -> videos/videotitle
 func getThumbnail(w http.ResponseWriter, req *http.Request) {
 
-	fmt.Println("got here")
 	thumbnailname := chi.URLParam(req, "thumbnail")
 
 	mediabase := getMediaBase(strings.Split(thumbnailname, ".jpg")[0])
@@ -84,6 +85,17 @@ func getThumbnail(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "image/JPEG")
 	http.ServeFile(w, req, thumbnailFile)
+}
+
+// Assuming profiles are in jpeg format and in a folder called profiles
+func getProfileImage(w http.ResponseWriter, req *http.Request) {
+
+	profile := chi.URLParam(req, "profile")
+
+	profileFile := filepath.Join("profiles", profile+".jpg")
+
+	w.Header().Set("Content-Type", "image/JPEG")
+	http.ServeFile(w, req, profileFile)
 }
 
 func getMediaBase(videoname string) string {
