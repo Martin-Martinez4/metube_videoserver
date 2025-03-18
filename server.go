@@ -32,10 +32,10 @@ func main() {
 
 	r.Get("/media/{videoname:[\\w-]+}/stream/", streamInit)
 	r.Get("/media/{videoname:[\\w-]+}/stream/{segment:[\\w-]+.ts}", streamContinue)
-	r.Get("/thumbnail/{thumbnail:[\\w]+.jpg}/", getThumbnail)
-	r.Get("/downloads/{thumbnail:[\\w]+.jpg}/", getThumbnail)
+	r.Get("/thumbnail/{thumbnail:[\\w%-]+.jpg}/", getThumbnail)
+	r.Get("/downloads/{thumbnail:[\\w%-]+.jpg}/", getThumbnail)
 	// r.Get("/profile/{profile:^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$}/", getProfileImage)
-	r.Get("/profile/{profile:[\\w]+}/", getProfileImage)
+	r.Get("/profile/{profile:[\\w\\s%.]*}/", getProfileImage)
 	r.Get("/banner/{profile:[\\w]+}/", getBannerImage)
 
 	err := http.ListenAndServe(":"+PORT, r)
@@ -86,6 +86,8 @@ func getThumbnail(w http.ResponseWriter, req *http.Request) {
 	mediabase := getMediaBase(strings.Split(thumbnailname, ".jpg")[0])
 	thumbnailFile := filepath.Join(mediabase, thumbnailname)
 
+	fmt.Println(thumbnailFile)
+
 	w.Header().Set("Content-Type", "image/JPEG")
 	http.ServeFile(w, req, thumbnailFile)
 }
@@ -103,7 +105,9 @@ func getProfileImage(w http.ResponseWriter, req *http.Request) {
 
 	profile := chi.URLParam(req, "profile")
 
-	profileFile := filepath.Join("profiles", profile+".jpg")
+	profileFile := filepath.Join("profiles", profile, profile+".jpg")
+
+	fmt.Printf(profileFile)
 	w.Header().Set("Content-Type", "image/JPEG")
 	http.ServeFile(w, req, profileFile)
 }
