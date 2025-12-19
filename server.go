@@ -27,7 +27,7 @@ func main() {
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
+		MaxAge:           100, // Maximum value not ignored by any of major browsers
 	}))
 
 	r.Get("/media/{videoname:[\\w-]+}/stream/", streamInit)
